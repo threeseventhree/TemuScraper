@@ -1,0 +1,75 @@
+import re
+from .browser import BrowserManager
+from .parser import parseSales, parseReviews, parseRating, parsePrice, cleanProductName
+from dataclasses import dataclass
+
+PRODUCT_LIST = ".autoFitGoodsList"
+
+@dataclass
+class Product:
+    id: str
+    name: str
+    url: str
+    price: float
+    sales: int
+    rating: float | None
+    reviews: int | None
+
+def extractProductId(url: str) -> str:
+    match = re.search(r"-g-(\d+)\.html", url)
+
+    if not match:
+        raise ValueError(
+            f"Could not extract product ID from URL: {url}"
+        )
+
+    return match.group(1)
+
+def parseProductCard(card) -> Product:
+    name = cleanProductName(card.locator("a[href] h2").inner_text())
+    url = card.locator("a[href]").first.get_attribute("href")
+    if not url:
+        raise ValueError("Could not find product URL")
+    priceText = card.locator('[data-type="price"]').inner_text()
+    salesText = card.locator('[data-type="saleTips"]').inner_text()
+
+    ratingLocator = card.locator('[role="img"][aria-label*="din 5 stele"]')
+
+    if ratingLocator.count() > 0:
+        ratingText = ratingLocator.first.get_attribute("aria-label")
+        rating = ( parseRating(ratingText) if ratingText else None)
+    else:
+        rating = None
+    reviewsLocator = card.get_by_text(
+        re.compile(r"recenzii", re.IGNORECASE)
+    )
+    if reviewsLocator.count() > 0:
+        reviewsText = reviewsLocator.first.inner_text()
+        reviews = parseReviews(reviewsText)
+    else:
+        reviews = None
+
+    return Product(
+        id=extractProductId(url),
+        name=name,
+        url=url,
+        price=parsePrice(priceText),
+        sales=parseSales(salesText),
+        rating=rating,
+        reviews=reviews,
+    )
+
+def getProducts(browser: BrowserManager) -> list[Product]:
+    if not browser.page:
+        raise RuntimeError("Browser has not been started. Call start() first.")
+    cards = browser.page.locator(f"{PRODUCT_LIST} > div")
+    products = []
+    for i in range(cards.count()):
+        card = cards.nth(i)
+        try:
+            product = parseProductCard(card)
+            products.append(product)
+        except Exception as error:
+            print(f"Could not parse product #{i + 1}: {error}")
+
+    return products

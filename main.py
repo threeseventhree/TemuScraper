@@ -1,6 +1,6 @@
 from scraper.browser import BrowserManager
 from scraper.search import TemuSearcher
-# Sample code for testing, to be modified later
+from scraper.product import getProducts
 
 TEMU_URL = "https://www.temu.com"
 SEARCH_INPUT = "#searchInput"
@@ -15,14 +15,10 @@ def main():
         searcher.search("ESP32")
         print("Search Submitted")
 
-        links = searcher.getProductLinks()
-        print(f"Found {len(links)} links")
-
-        count = searcher.getProductCount()
-        print(f"Found {count} product cards")
-
-        html = searcher.getFirstProductHTML()
-        print(html)
+        products = getProducts(browser)
+        print(f"\nFound {len(products)} products\n")
+        for product in products:
+            print(product)
         
     finally:
         browser.close()
