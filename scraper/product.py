@@ -2,7 +2,9 @@ import re
 from .browser import BrowserManager
 from .parser import parseSales, parseReviews, parseRating, parsePrice, cleanProductName
 from dataclasses import dataclass
+from urllib.parse import urljoin
 
+TEMU_BASE_URL = "https://www.temu.com"
 PRODUCT_LIST = ".autoFitGoodsList"
 
 @dataclass
@@ -27,22 +29,29 @@ def extractProductId(url: str) -> str:
 
 def parseProductCard(card) -> Product:
     name = cleanProductName(card.locator("a[href] h2").inner_text())
+
     url = card.locator("a[href]").first.get_attribute("href")
     if not url:
         raise ValueError("Could not find product URL")
+    url = urljoin(TEMU_BASE_URL, url)
+
     priceText = card.locator('[data-type="price"]').inner_text()
-    salesText = card.locator('[data-type="saleTips"]').inner_text()
+
+    salesLocator = card.locator('[data-type="saleTips"]')
+    if salesLocator.count() > 0:
+        salesText = salesLocator.first.inner_text()
+        sales = parseSales(salesText)
+    else:
+        sales = 0
 
     ratingLocator = card.locator('[role="img"][aria-label*="din 5 stele"]')
-
     if ratingLocator.count() > 0:
         ratingText = ratingLocator.first.get_attribute("aria-label")
         rating = ( parseRating(ratingText) if ratingText else None)
     else:
         rating = None
-    reviewsLocator = card.get_by_text(
-        re.compile(r"recenzii", re.IGNORECASE)
-    )
+    
+    reviewsLocator = card.get_by_text(re.compile(r"recenzii", re.IGNORECASE))
     if reviewsLocator.count() > 0:
         reviewsText = reviewsLocator.first.inner_text()
         reviews = parseReviews(reviewsText)
@@ -54,7 +63,7 @@ def parseProductCard(card) -> Product:
         name=name,
         url=url,
         price=parsePrice(priceText),
-        sales=parseSales(salesText),
+        sales=sales,
         rating=rating,
         reviews=reviews,
     )

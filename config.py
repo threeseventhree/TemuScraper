@@ -1,13 +1,13 @@
 SEARCH_TERMS = [
-    "oled display",
     "esp32",
-    "speaker",
-    "bluetooth module"
+    "oled display esp32",
 ]
 
 MIN_RATING = 4.5
 MIN_REVIEWS = 100
-MAX_PRICE = 20
+MIN_SALES = 1000
+MAX_PRICE = 300
 
 MAX_PRODUCTS = 100
+MAX_SCROLLS = 20
 HEADLESS = True
