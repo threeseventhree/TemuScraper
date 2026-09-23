@@ -10,10 +10,10 @@ from config import (
 
 from scraper.browser import BrowserManager
 from scraper.search import TemuSearcher
-from scraper.product import getProducts, getAverageProductPrices, getMedianProductPrice
+from scraper.product import getProducts, getAverageProductPrices
 from scraper.filters import filterProducts
 from scraper.scoring import scoreProducts
-from scraper.exporter import createSearchResult, exportSearchResults
+from scraper.exporter import createSearchResult, exportSearchResults, exportTxt
 
 TEMU_URL = "https://www.temu.com"
 SEARCH_INPUT = "#searchInput"
@@ -66,6 +66,7 @@ def main():
     finally:
         browser.close()
     exportSearchResults(searchResults)
+    exportTxt(searchResults)
 
 if __name__ == "__main__":
     main()

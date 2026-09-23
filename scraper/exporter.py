@@ -26,6 +26,24 @@ def exportSearchResults(
     )
     print(f"Saved {totalProducts} products to {path}")
 
+def exportTxt(
+    searchResults: list[dict],
+    filename: str = "data/products.txt",
+):
+    path = Path(filename)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("w", encoding="utf-8") as file:
+        for result in searchResults:
+            file.write(f"{result['query']}\n\n")
+
+            for product in result["products"]:
+                file.write(f"{product['url']}\n")
+
+            file.write("\n")
+
+    print(f"Saved TXT results to {path}")
+
 def createSearchResult(
     query: str,
     products: list[tuple[Product, float]],

@@ -90,8 +90,3 @@ def getAverageProductPrices(products: list[Product]):
         totalPrice += product.price
 
     return totalPrice / len(products)
-
-def getMedianProductPrice(products: list[Product]) -> float:
-    prices = [product.price for product in products]
-
-    return median(prices)
