@@ -3,7 +3,6 @@ from config import (
     MIN_RATING,
     MIN_REVIEWS,
     MIN_SALES,
-    MAX_PRICE,
     MAX_PRODUCTS,
     MAX_SCROLLS,
     HEADLESS,
@@ -11,7 +10,7 @@ from config import (
 
 from scraper.browser import BrowserManager
 from scraper.search import TemuSearcher
-from scraper.product import getProducts
+from scraper.product import getProducts, getAverageProductPrices, getMedianProductPrice
 from scraper.filters import filterProducts
 from scraper.scoring import scoreProducts
 from scraper.exporter import createSearchResult, exportSearchResults
@@ -41,13 +40,14 @@ def main():
             )
 
             products = getProducts(browser)
+            AVERAGE_PRICE = getAverageProductPrices(products)
             print(f"\nFound {len(products)} products")
             filteredProducts = filterProducts(
                 products,
                 minRating=MIN_RATING,
                 minReviews=MIN_REVIEWS,
                 minSales=MIN_SALES,
-                maxPrice=MAX_PRICE
+                averagePrice=AVERAGE_PRICE
             )
             print(f"After filtering, we're left with " f"{len(filteredProducts)} products.")
 
@@ -59,7 +59,7 @@ def main():
                 minRating=MIN_RATING,
                 minReviews=MIN_REVIEWS,
                 minSales=MIN_SALES,
-                maxPrice=MAX_PRICE,
+                averagePrice=AVERAGE_PRICE,
             )
 
             searchResults.append(searchResult)

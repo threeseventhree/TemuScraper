@@ -1,12 +1,10 @@
 SEARCH_TERMS = [
     "esp32",
-    "oled display esp32",
 ]
 
 MIN_RATING = 4.5
 MIN_REVIEWS = 100
 MIN_SALES = 1000
-MAX_PRICE = 300
 
 MAX_PRODUCTS = 100
 MAX_SCROLLS = 20

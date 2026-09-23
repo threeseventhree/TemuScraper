@@ -33,7 +33,7 @@ def createSearchResult(
     minRating: float,
     minReviews: int,
     minSales: int,
-    maxPrice: float,
+    averagePrice: float,
 ) -> dict:
 
     productData = []
@@ -51,7 +51,7 @@ def createSearchResult(
             "minRating": minRating,
             "minReviews": minReviews,
             "minSales": minSales,
-            "maxPrice": maxPrice
+            "averagePrice": averagePrice
         },
         "products": productData
     }

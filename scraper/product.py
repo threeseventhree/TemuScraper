@@ -1,4 +1,5 @@
 import re
+from statistics import median
 from .browser import BrowserManager
 from .parser import parseSales, parseReviews, parseRating, parsePrice, cleanProductName
 from dataclasses import dataclass
@@ -82,3 +83,15 @@ def getProducts(browser: BrowserManager) -> list[Product]:
             print(f"Could not parse product #{i + 1}: {error}")
 
     return products
+
+def getAverageProductPrices(products: list[Product]):
+    totalPrice = 0;
+    for product in products:
+        totalPrice += product.price
+
+    return totalPrice / len(products)
+
+def getMedianProductPrice(products: list[Product]) -> float:
+    prices = [product.price for product in products]
+
+    return median(prices)

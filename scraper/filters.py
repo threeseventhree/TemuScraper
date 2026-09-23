@@ -5,7 +5,7 @@ def filterProducts(
     minRating: float | None = None,
     minReviews: int | None = None,
     minSales: int | None = None,
-    maxPrice: float | None = None,
+    averagePrice: float | None = None,
 ) -> list[Product]:
     filteredProducts = []
 
@@ -22,8 +22,8 @@ def filterProducts(
             if product.sales < minSales:
                 continue
 
-        if maxPrice is not None:
-            if product.price > maxPrice:
+        if averagePrice is not None:
+            if product.price > averagePrice:
                 continue
 
         filteredProducts.append(product)
