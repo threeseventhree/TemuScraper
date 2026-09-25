@@ -1,10 +1,24 @@
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, VerticalScroll
-from textual.widgets import Button, Footer, Header, Input, Label, Static
-from textual.screen import ModalScreen
+from textual.containers import Container, Horizontal, VerticalScroll # useful customizable containers and scrollers, easy to implement
+from textual.widgets import Button, Footer, Header, Input, Label, Static # responsible for the widgets in the main app and the config
+from textual.screen import ModalScreen # modal screen for config window
+from textual.worker import Worker, WorkerState # a worker that runs in the background and performs certain tasks, in this case the scraping logic
 
 from config import ScraperConfig
+from scraper.runner import runScraper
+from scraper.exporter import exportTxt
 
+from functools import partial
+
+# Getting the query from the searchbox, splitting at commas and adding it to the list of queries
+def parseQueries(queryText: str) -> list[str]:
+    return [
+        query.strip()
+        for query in queryText.split(",")
+        if query.strip()
+    ]
+
+# Adding a modal config screen
 class ConfigScreen(ModalScreen):
     def __init__(self, config: ScraperConfig):
         super().__init__()
@@ -86,6 +100,7 @@ class ConfigScreen(ModalScreen):
         elif event.button.id == "save-config":
             self.saveConfig()
 
+# Main application code
 class TemuScraperApp(App):
     CSS = """
     Screen {
@@ -135,26 +150,26 @@ class TemuScraperApp(App):
         border: solid #3d78a6;
         background: $surface;
     }
-    
+
     #config-title {
         height: 3;
         text-align: center;
         text-style: bold;
     }
-    
+
     #config-scroll {
         height: 1fr;
     }
-    
+
     #config-container Input {
         margin-bottom: 1;
     }
-    
+
     #config-buttons {
         height: 4;
         align: center middle;
     }
-    
+
     #config-buttons Button {
         margin: 1;
     }
@@ -162,6 +177,8 @@ class TemuScraperApp(App):
     def __init__(self):
         super().__init__()
         self.config = ScraperConfig()
+        self.searchWorker = None
+        self.searchResults = []
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -212,16 +229,57 @@ class TemuScraperApp(App):
             )
 
         elif event.button.id == "search":
-            self.updateStatus("Search button pressed.")
+            queryText = self.query_one("#query-input", Input).value
+            queries = parseQueries(queryText)
+
+            if not queries:
+                self.updateStatus("You haven't added any queries to search.")
+                return
+
+            self.updateStatus(f"Starting search for {len(queries)} queries...")
+            self.runSearch(queries)
 
         elif event.button.id == "export":
-            self.updateStatus("Export button pressed.")
+            exportTxt(self.searchResults or [])
+            self.updateStatus("Successfully exported the data as TXT file.")
 
+    def runSearch(self, queries: list[str]):
+        work = partial(runScraper, queries, self.config) 
+        # partial is used to create a new function and pass the arguments to it, avoiding the error we would get typically
+
+        self.searchWorker = self.run_worker(
+            work,
+            name="temu-search",
+            group="scraping",
+            exclusive=True,
+            thread=True,
+        )
+
+    def on_worker_state_changed(self, event: Worker.StateChanged):
+        if event.worker is not self.searchWorker:
+            return
+
+        if event.state == WorkerState.SUCCESS:
+            self.searchResults = event.worker.result
+
+            totalProducts = sum(
+                len(result["products"])
+                for result in (self.searchResults or [])
+            )
+
+            self.updateStatus(
+                f"Search complete — "
+                f"{totalProducts} products found."
+            )
+        elif event.state == WorkerState.ERROR:
+            self.updateStatus(
+                f"Search failed: {event.worker.error}"
+            )
+            
     def updateStatus(self, message: str):
         self.query_one("#status", Static).update(
             f"Status: {message}"
         )
-
 
 if __name__ == "__main__":
     TemuScraperApp().run()
