@@ -1,11 +1,12 @@
-SEARCH_TERMS = [
-    "esp32",
-]
+from dataclasses import dataclass
 
-MIN_RATING = 4.5
-MIN_REVIEWS = 100
-MIN_SALES = 1000
+@dataclass
+class ScraperConfig:
+    minRating: float = 4.5
+    minReviews: int = 100
+    minSales: int = 1000
 
-MAX_PRODUCTS = 100
-MAX_SCROLLS = 20
-HEADLESS = True
+    maxProducts: int = 100
+    maxScrolls: int = 20
+
+    headless: bool = True

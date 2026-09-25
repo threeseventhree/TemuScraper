@@ -1,12 +1,4 @@
-from config import (
-    SEARCH_TERMS,
-    MIN_RATING,
-    MIN_REVIEWS,
-    MIN_SALES,
-    MAX_PRODUCTS,
-    MAX_SCROLLS,
-    HEADLESS,
-)
+from config import ScraperConfig
 
 from scraper.browser import BrowserManager
 from scraper.search import TemuSearcher
@@ -17,9 +9,10 @@ from scraper.exporter import createSearchResult, exportSearchResults, exportTxt
 
 TEMU_URL = "https://www.temu.com"
 SEARCH_INPUT = "#searchInput"
+config = ScraperConfig()
 
 def main():
-    browser = BrowserManager(headless=HEADLESS)
+    browser = BrowserManager(headless=config.headless)
 
     searchResults = []
     try:
@@ -27,7 +20,7 @@ def main():
         browser.navigate(TEMU_URL)
 
         searcher = TemuSearcher(browser)
-        for searchTerm in SEARCH_TERMS:
+        for searchTerm in ["esp32", "oled screen esp32"]:
             print(f"\n{'=' * 50}")
             print(f"Searching for: {searchTerm}")
             print(f"{'=' * 50}")
@@ -35,19 +28,19 @@ def main():
             searcher.search(searchTerm)
             print("Search Submitted")
             searcher.load_more_products(
-                maxProducts=MAX_PRODUCTS,
-                maxScrolls=MAX_SCROLLS
+                maxProducts=config.maxProducts,
+                maxScrolls=config.maxScrolls
             )
 
             products = getProducts(browser)
-            AVERAGE_PRICE = getAverageProductPrices(products)
+            averagePrice = getAverageProductPrices(products)
             print(f"\nFound {len(products)} products")
             filteredProducts = filterProducts(
                 products,
-                minRating=MIN_RATING,
-                minReviews=MIN_REVIEWS,
-                minSales=MIN_SALES,
-                averagePrice=AVERAGE_PRICE
+                minRating=config.minRating,
+                minReviews=config.minReviews,
+                minSales=config.minSales,
+                averagePrice=averagePrice
             )
             print(f"After filtering, we're left with " f"{len(filteredProducts)} products.")
 
@@ -56,10 +49,10 @@ def main():
                 query=searchTerm,
                 products=scoredProducts,
                 totalProducts=len(products),
-                minRating=MIN_RATING,
-                minReviews=MIN_REVIEWS,
-                minSales=MIN_SALES,
-                averagePrice=AVERAGE_PRICE,
+                minRating=config.minRating,
+                minReviews=config.minReviews,
+                minSales=config.minSales,
+                averagePrice=averagePrice,
             )
 
             searchResults.append(searchResult)
