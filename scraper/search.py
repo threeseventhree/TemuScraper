@@ -9,6 +9,7 @@ class TemuSearcher:
         self.browser = browser
     # Searching for a product based on a query
     def search(self, query: str):
+        self.browser.ensureLoggedIn()
         self.browser.waitForSelector(SEARCH_INPUT)
         self.browser.fill(SEARCH_INPUT, query)
         self.browser.press(SEARCH_INPUT, "Enter")

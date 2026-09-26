@@ -1,5 +1,5 @@
 from pathlib import Path
-from playwright.sync_api import Browser, BrowserContext, Page, Playwright, sync_playwright
+from playwright.sync_api import Browser, BrowserContext, Page, Playwright, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 class BrowserManager:
     # Variables & Type hints
@@ -39,7 +39,13 @@ class BrowserManager:
     def waitForSelector(self, selector: str):
         if not self.page:
             raise RuntimeError("Browser has not been started. Call start() first.")
-        return self.page.wait_for_selector(selector)
+        try:
+            return self.page.wait_for_selector(selector)
+
+        except PlaywrightTimeoutError as error:
+            if self.isLoginPage():
+                raise RuntimeError("Temu session expired. Please log in again.") from error
+            raise
 
     def fill(self, selector: str, text: str):
         if not self.page:
@@ -106,3 +112,12 @@ class BrowserManager:
         if not self.page:
             raise RuntimeError("Browser has not been started. Call start() first.")
         return self.page.locator(selector).first.inner_text()
+
+    def isLoginPage(self) -> bool:
+        if not self.page:
+            return False
+        return "/login.html" in self.page.url
+
+    def ensureLoggedIn(self):
+        if self.isLoginPage():
+            raise RuntimeError("Temu session expired. Please log in again.")

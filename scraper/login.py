@@ -1,25 +1,27 @@
-from browser import BrowserManager
+import threading
 
-
+from scraper.browser import BrowserManager
 TEMU_URL = "https://www.temu.com"
 
+class TemuLogin:
+    def __init__(self):
+        self.browser = BrowserManager(headless=False)
+        self.finishEvent = threading.Event()
 
-def main():
-    browser = BrowserManager(headless=False)
+    def start(self):
+        try:
+            self.browser.start()
+            self.browser.navigate(TEMU_URL)
 
-    try:
-        browser.start()
-        browser.navigate(TEMU_URL)
+            while not self.finishEvent.wait(0.5):
+                if self.browser.page and self.browser.page.is_closed():
+                    raise RuntimeError("Login browser was closed before login was finished.")
+                if (self.browser.page and self.browser.page.is_closed()):
+                    raise RuntimeError("Login browser page was closed before login was finished.")
+            self.browser.save_state()
 
-        print()
-        print("Please log in to Temu in the browser.")
-        input("Press ENTER after you have finished logging in...")
+        finally:
+            self.browser.close()
 
-        browser.save_state()
-
-    finally:
-        browser.close()
-
-
-if __name__ == "__main__":
-    main()
+    def requestFinish(self):
+        self.finishEvent.set()
