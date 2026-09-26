@@ -65,11 +65,6 @@ class BrowserManager:
         response = self.page.goto(url, wait_until="domcontentloaded")
         if response:
             print(f"Status: {response.status}")
-        # Debug
-        self.page.screenshot(
-            path="debug.png",
-            full_page=True,
-        )
         return response
     
     def getTitle(self) -> str:
